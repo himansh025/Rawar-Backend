@@ -50,7 +50,7 @@ const email = class Email {
   async sendWelcome() {
     await this.send(
       'welcome',
-      'Welcome to the Tours app. We are happy to have you!'
+      'Welcome to the Career Catalyst. We are happy to have you!'
     );
   }
 
