@@ -1,11 +1,13 @@
 import User from "../Model/User.js";
 import asyncHandler from '../utils/asyncHandler'
 import ApiError from '../utils/Apierror.js'
-import  Apiresponse from '../utils/Apiresponse'
+import Apiresponse from '../utils/Apiresponse'
 import { Question } from "../Model/Question.js";
 
-const addquestions = asyncHandler( async (req, res) => {
-  try {
+
+// Get all questions with filters
+const Getallquestions = asyncHandler(async (req, res) => {
+ 
     const { category, difficulty, search, limit = 10, page = 1 } = req.query;
     const query = {};
 
@@ -31,44 +33,46 @@ const addquestions = asyncHandler( async (req, res) => {
       .sort({ createdAt: -1 });
 
     const total = await Question.countDocuments(query);
-
-    res.json({
-      questions,
-      pagination: {
-        total,
-        page: parseInt(page),
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-const updatequestion= asyncHandler( async (req, res) => {
-  try {
-    const question = await Question.findById(req.params.id)
-      .select('-correctAnswer');
-    
-    if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
+    const pagination = {
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit)
     }
 
-    res.json(question);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
+    // throw new ApiError(500, "somethng went wrog while generating refresh and access token")
+
+    return res.status(201).json(
+      new Apiresponse(questions, pagination, "Get all questions with filters")
+    )
+  
 });
 
- const userdetail=asyncHandler( async (req, res) => {
-  try {
+
+//    Get question by ID
+const GetquestionbyID = asyncHandler(async (req, res) => {
+
+    const question = await Question.findById(req.params.id)
+      .select('-correctAnswer');
+
+    if (!question) {
+      throw new ApiError(400,"quesiton not found")
+    }
+
+    return res.status(201).json(
+      new Apiresponse(question, "question get by id  succesfully")
+    )
+
+  
+});
+
+
+//   Submit answer for a question
+const SubmitAns = asyncHandler(async (req, res) => {
     const { answer } = req.body;
     const question = await Question.findById(req.params.id);
 
     if (!question) {
-      return res.status(404).json({ message: 'Question not found' });
+    throw new ApiError(400,'Question not found' );
     }
 
     const isCorrect = answer === question.correctAnswer;
@@ -80,17 +84,13 @@ const updatequestion= asyncHandler( async (req, res) => {
         'progress.correctAnswers': isCorrect ? 1 : 0
       }
     });
+ let explanation=  question.explanation
+   
 
-    res.json({
-      isCorrect,
-      explanation: question.explanation
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
+    return res.status(201).json(
+
+      new Apiresponse(isCorrect,explanation, "user registered succesfully")
+    )
 });
+export { Getallquestions, GetquestionbyID, SubmitAns };
 
-
-
-export  {addquestions,updatequestion,userdetail}

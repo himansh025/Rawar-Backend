@@ -1,5 +1,4 @@
-import mongoose from 'mongoose';
-
+import mongoose from  'mongoose';
 
 const questionSchema = new mongoose.Schema({
   category: {
@@ -49,5 +48,5 @@ const questionSchema = new mongoose.Schema({
   }
 });
 
+export const Question = mongoose.model('Question', questionSchema);
 
-export const  Question=  mongoose.model('Question', questionSchema);

@@ -1,14 +1,16 @@
-const User = require("../Model/user.js");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-// const Tour = require("../Model/tour.js");
-const asyncHandler= require('../utils/asyncHandler.js')
-const ApiError =require('../utils/Apierror.js')
-const  Apiresponse=require('../utils/Apiresponse.js');
-const nodemailer = require("nodemailer");
-require('dotenv').config();
+import User from "../Model/User.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import asyncHandler from '../utils/asyncHandler'
+import ApiError from '../utils/Apierror.js'
+import  Apiresponse from '../utils/Apiresponse'
+import nodemailer  from ("nodemailer");
+import dotenv from 'dotenv'
 
-// const cookieParser=  require('cookie-parser')
+
+dotenv.config();
+// import  cookieParser from 'cookie-parser'
+
 
 const tempUserStore = {};
 // Function to generate OTP
@@ -20,8 +22,8 @@ const generateOTP=(length)=> {
   }
   return otp;
 }
-console.log("auth",process.env.EMAIL) 
-console.log("auth",process.env.PASSWORD) 
+// console.log("auth",process.env.EMAIL) 
+// console.log("auth",process.env.PASSWORD) 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -151,11 +153,6 @@ const verifyOtp = asyncHandler(async (req, res, next) => {
      message: 'OTP verified successfully'})
     )});
 
-
-
-
-
-
 const login =asyncHandler( async (req, res,next) => {
     const { email, password } = req.body;
     console.log("check",req.body);
@@ -190,6 +187,12 @@ const login =asyncHandler( async (req, res,next) => {
     secure: true,
   }
 
+  let extrauserdet= {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  }
     // Send response with token
     res
     .status(200)
@@ -197,7 +200,7 @@ const login =asyncHandler( async (req, res,next) => {
     .cookie("refreshtoken", refreshtoken, options)
     .json( new Apiresponse(
       200,{
-        user: {loggedinuser, accesstoken, refreshtoken}}
+        user: {loggedinuser,extrauserdet, accesstoken, refreshtoken}}
       ,"user logged in successfully"
     ));
 
@@ -270,7 +273,7 @@ const refreshaccesstoken = asyncHandler(async (req, res,next) => {
 
 })
 
-module.exports= {
+export  {
   signup,
   login,
   logout,
