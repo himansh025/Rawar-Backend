@@ -43,4 +43,4 @@ class AdminRepository {
   }
 }
 
-module.exports = new AdminRepository();
+export default new AdminRepository();

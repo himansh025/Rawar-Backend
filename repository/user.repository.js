@@ -1,4 +1,4 @@
-import User from './user.model';
+import User from './Model/user.model';
 
 class UserRepository {
   async createUser(data) {
@@ -41,6 +41,21 @@ class UserRepository {
       throw new Error(`Error deleting user: ${error.message}`);
     }
   }
-}
+  async updateProgress(userId, updateData) {
+    return Question.findByIdAndUpdate(
+      userId,
+      { $inc: updateData }, // Incremental update for progress
+      { new: true } // Return updated document
+    );
+  }
 
-module.exports = new UserRepository();
+  // Get leaderboard
+  async getLeaderboard() {
+    return Question.find({})
+      .sort({ 'progress.correctAnswers': -1 })
+      .limit(10)
+      .select('name progress.correctAnswers');
+  }
+};
+export default new UserRepository();
+
