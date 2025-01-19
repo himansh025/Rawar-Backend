@@ -1,96 +1,93 @@
-import User from "../Model/User.js";
-import asyncHandler from '../utils/asyncHandler'
+import {User} from "../Model/User.js";
+import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/Apierror.js'
-import Apiresponse from '../utils/Apiresponse'
-import { Question } from "../Model/Question.js";
+import Apiresponse from '../utils/Apiresponse.js'
+// import { Question } from "../Model/Question.js";
 
 
 // Get all questions with filters
-const Getallquestions = asyncHandler(async (req, res) => {
- 
-    const { category, difficulty, search, limit = 10, page = 1 } = req.query;
-    const query = {};
+import axios from 'axios';
 
-    if (category && category !== 'all') {
-      query.category = category;
-    }
-    if (difficulty && difficulty !== 'all') {
-      query.difficulty = difficulty;
-    }
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
-      ];
-    }
 
-    const skip = (page - 1) * limit;
-    const questions = await Question.find(query)
-      .select('-correctAnswer') // Don't send correct answer to client
-      .limit(parseInt(limit))
-      .skip(skip)
-      .sort({ createdAt: -1 });
+const GetQuestionsFromAPI = asyncHandler(async (req, res) => {
+  const { category, difficulty, limit } = req.query;
 
-    const total = await Question.countDocuments(query);
-    const pagination = {
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit)
-    }
+  // External API URL
+  const apiUrl = `   ''}&type=multiple`;
 
-    // throw new ApiError(500, "somethng went wrog while generating refresh and access token")
+  try {
+    const response = await axios.get(apiUrl);
+    const questions = response.data.results;
 
-    return res.status(201).json(
-      new Apiresponse(questions, pagination, "Get all questions with filters")
-    )
-  
+    res.status(200).json({
+      success: true,
+      data: questions,
+      message: 'Questions fetched from external API successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching questions from API',
+    });
+  }
 });
 
+ const GetquestionbyID = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-//    Get question by ID
-const GetquestionbyID = asyncHandler(async (req, res) => {
+  try {
+    // Simulating fetching question by ID from external API
+    const apiUrl = `https://opentdb.com/api.php?amount=1&category=9&type=multiple`;
+    const response = await axios.get(apiUrl);
 
-    const question = await Question.findById(req.params.id)
-      .select('-correctAnswer');
+    const question = response.data.results[0];
 
     if (!question) {
-      throw new ApiError(400,"quesiton not found")
+      throw new ApiError(400, 'Question not found');
     }
 
-    return res.status(201).json(
-      new Apiresponse(question, "question get by id  succesfully")
-    )
+    // Exclude the correct answer
+    const questionWithoutAnswer = {
+      question: question.question,
+      options: question.incorrect_answers.concat(question.correct_answer),
+    };
 
-  
+    return res.status(200).json(
+      new Apiresponse(questionWithoutAnswer, 'Question fetched successfully')
+    );
+  } catch (error) {
+    throw new ApiError(500, 'Error fetching question from external API');
+  }
 });
 
-
-//   Submit answer for a question
+// Submit Answer for a Question
 const SubmitAns = asyncHandler(async (req, res) => {
-    const { answer } = req.body;
-    const question = await Question.findById(req.params.id);
+  const { answer, question } = req.body;
 
-    if (!question) {
-    throw new ApiError(400,'Question not found' );
-    }
-
+  try {
+    // Compare the answer with the correct answer
     const isCorrect = answer === question.correctAnswer;
 
-    // Update user's progress
+    // Simulate updating user's progress
     await User.findByIdAndUpdate(req.user.id, {
       $inc: {
         'progress.completedQuestions': 1,
-        'progress.correctAnswers': isCorrect ? 1 : 0
-      }
+        'progress.correctAnswers': isCorrect ? 1 : 0,
+      },
     });
- let explanation=  question.explanation
-   
 
-    return res.status(201).json(
+    // Include explanation if available
+    const explanation = question.explanation || 'No explanation provided.';
 
-      new Apiresponse(isCorrect,explanation, "user registered succesfully")
-    )
+    return res.status(200).json(
+      new Apiresponse(
+        { isCorrect, explanation },
+        'Answer submitted successfully'
+      )
+    );
+  } catch (error) {
+    throw new ApiError(500, 'Error submitting answer');
+  }
 });
-export { Getallquestions, GetquestionbyID, SubmitAns };
+export { GetQuestionsFromAPI, GetquestionbyID, SubmitAns };
 

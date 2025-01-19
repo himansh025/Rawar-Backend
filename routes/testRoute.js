@@ -1,5 +1,5 @@
-// import express from ('express')
-import  router from  express.Router();
+import  {Router} from  'express';
+const router =Router()
 import  {GettestbyID,getalltest,Submittestanswers,Starttest} from '../controllers/testController.js';
 
 router.get('/Getallquestions',getalltest );

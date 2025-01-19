@@ -1,6 +1,7 @@
-const cloudinary=  require('cloudinary');
-const fs =require('fs');
-
+// const cloudinary=  require('cloudinary');
+// const fs =require('fs');
+import cloudinary from 'cloudinary'
+import fs from 'fs'
 // Cloudinary configuration
 cloudinary.config({
   cloud_name: 'draezw4ed',

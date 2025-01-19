@@ -1,15 +1,10 @@
 
-
 import express from 'express';
-import cors from 'cors';
-const express = require('express'); 
 import cookieParser from "cookie-parser";
-import cors from "cors";
-import path from 'path';
+import cors from 'cors';
+// import path from 'path';
 const app = express();
-
-// CORS configuration based on environment
-
+console.log("hello");
 
 const allowedOrigins = [
   'http://localhost:5173', // Local development frontend
@@ -34,20 +29,21 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 // Static files configuration
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use(express.static("public"));
+// app.use('/public', express.static(path.join(__dirname, 'public')));
+// app.use(express.static("public"));
 app.use(cookieParser());
 
 // Importing Routes
-import authRoutes from './routes/auth.js';
-import questionRoutes from './routes/questions.js';
-import testRoutes from './routes/tests.js';
-import userRoutes from './routes/users.js';
+// import authRoutes from './routes/auth.js';
+import questionRoutes from './routes/quizRoute.js';
+import testRoutes from './routes/testRoute.js';
+import userRoutes from './routes/userRoutes.js';
 
 
+console.log("hf");
 
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/user',userRoutes);
+// app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/questions', questionRoutes);
 app.use('/api/v1/tests', testRoutes);
 
