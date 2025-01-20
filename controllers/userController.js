@@ -27,7 +27,7 @@ const GenerateAccessandRefreshtoken = async (userid) => {
     throw new ApiError(500, "somethng went wrog while generating refresh and access token")
   }
 }
-const signup = asyncHandler(async (req, res, next) => {
+const signup = asyncHandler(async (req, res) => {
   console.log("hello");
   
   const { name, email, password } = req.body;

@@ -8,16 +8,19 @@ import  {
     refreshaccesstoken,
     // verifyOtp,
     getcurrentuser,
-    updatravatarimage
+    // updatravatarimage
   } from '../controllers/userController.js'
   import verifyjwt from "../middleware/auth.js";
 
-router.post('/register',signup );
+router.post('/signup',signup
+  
+  //
+);
 router.post('/login',login );
 router.post('/logout',logout );
 router.post('/refreshaccesstoken',refreshaccesstoken );
 // router.post('/verifyOtp',verifyOtp );
-router.patch("/update-avatar", verifyjwt, upload.single("avatar"), updatravatarimage);
+// router.patch("/update-avatar", verifyjwt, upload.single("avatar"), updatravatarimage);
 router.get('/userdetail',verifyjwt,getcurrentuser );
 
 
