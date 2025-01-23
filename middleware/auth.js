@@ -1,5 +1,5 @@
 
-import User from "../Model/User.js"
+import {User} from "../Model/User.js"
 import jwt from "jsonwebtoken"
 import asyncHandler  from '../utils/asyncHandler.js'
 import ApiError  from '../utils/Apierror.js'
@@ -14,6 +14,7 @@ import ApiError  from '../utils/Apierror.js'
      if(!token){
          throw new ApiError(401,"unauthorized request")
      }
+ console.log(token);
  
    const decodedtoken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
  

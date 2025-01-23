@@ -1,40 +1,13 @@
-import User from "../Model/User.js";
+import {User} from "../Model/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import asyncHandler from '../utils/asyncHandler'
+import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/Apierror.js'
-import  Apiresponse from '../utils/Apiresponse'
-import nodemailer  from ("nodemailer");
-import dotenv from 'dotenv'
-
-
-dotenv.config();
-// import  cookieParser from 'cookie-parser'
-
-
-const tempUserStore = {};
-// Function to generate OTP
-const generateOTP=(length)=> {
-  const digits = "0123456789";
-  let otp = "";
-  for (let i = 0; i < length; i++) {
-    otp += digits[Math.floor(Math.random() * digits.length)];
-  }
-  return otp;
-}
-// console.log("auth",process.env.EMAIL) 
-// console.log("auth",process.env.PASSWORD) 
-// Nodemailer setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL, 
-    pass: process.env.PASSWORD, 
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+import  Apiresponse from '../utils/Apiresponse.js'
+// import nodemailer  from "nodemailer";
+// import dotenv from 'dotenv'
+import uploadOnCloudinary from "../utils/cloudinary.js";
+import { isValidObjectId } from "mongoose";
 
 
 const GenerateAccessandRefreshtoken = async (userid) => {
@@ -54,7 +27,9 @@ const GenerateAccessandRefreshtoken = async (userid) => {
     throw new ApiError(500, "somethng went wrog while generating refresh and access token")
   }
 }
-const signup = asyncHandler(async (req, res, next) => {
+const signup = asyncHandler(async (req, res) => {
+  console.log("hello");
+  
   const { name, email, password } = req.body;
 
   console.log("data",name,email,password);
@@ -70,54 +45,6 @@ const signup = asyncHandler(async (req, res, next) => {
   }
 console.log(existingUser);
 
-  // Generate OTP
-  const otp = generateOTP(4);
-  console.log(otp);
-  
-  // Temporarily store the user info along with OTP (to be verified later)
-  tempUserStore[email] = { name, email, password, otp };
-  
-  // Send OTP via email
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: email,
-    subject: `Hello! ${name}, Please Verify Your OTP`,
-    html: `<strong>Your OTP code is: ${otp}</strong>`,
-  };
-  console.log("main",mailOptions);
-  
-
-  try {
-    const data= await transporter.sendMail(mailOptions);
-    console.log("data",data);
-    
-    res.status(200).json(new Apiresponse(200, email, "OTP sent successfully"));
-  } catch (error) {
-    throw new ApiError(500, `Error while sending OTP: ${error}`);
-  }
-});
-
-// OTP verification endpoint
-const verifyOtp = asyncHandler(async (req, res, next) => {
-
-  const { email,otp } = req.body;
-  console.log("aya",req.body);
-
-  // Check if the OTP exists in the temporary store
-  const storedUser = tempUserStore[email];
-  if (!storedUser) {
-    throw new ApiError(400, "No OTP request found for this email");
-  }
-
-  // Validate OTP
-  if (storedUser.otp !== otp) {
-    throw new ApiError(400, "Invalid OTP");
-  }
-
-  // OTP is valid, create user
-  const { name, password } = storedUser;
-
-  // Hash the password
   const salt = await bcrypt.genSalt(8);
   const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -126,7 +53,7 @@ const verifyOtp = asyncHandler(async (req, res, next) => {
   await newUser.save();
 
   // Clear the temporary store
-  delete tempUserStore[email];
+  // delete tempUserStore[email];
   console.log("user",newUser);
 
   const {accesstoken,refreshtoken}=await GenerateAccessandRefreshtoken(newUser?._id)
@@ -150,7 +77,7 @@ const verifyOtp = asyncHandler(async (req, res, next) => {
     200,{
       success: true,
      user:{accesstoken,refreshtoken,createdUser},
-     message: 'OTP verified successfully'})
+     message: 'signup successfully'})
     )});
 
 const login =asyncHandler( async (req, res,next) => {
@@ -166,6 +93,8 @@ const login =asyncHandler( async (req, res,next) => {
     if (!user) {
       throw new ApiError("Invalid email or password" );
     }
+    console.log(user.password);
+    
 
     // Compare password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -205,6 +134,54 @@ const login =asyncHandler( async (req, res,next) => {
     ));
 
 });
+
+
+const updatravatarimage = asyncHandler(async (req, res) => {
+const updateavatar = req.file.path;
+if (!updateavatar) {
+  throw new ApiError(400, "update image cover is not found")
+}
+
+
+const avatar = await uploadOnCloudinary(updateavatar)
+// console.log("acatar check",avatar);
+
+if (!avatar.url) {
+  throw new ApiError(500, "update avatar url missing")
+}
+
+const user = await User.findByIdAndUpdate(
+  req.user?._id,
+  {
+    $set:
+    {
+      avatar: avatar.url
+    }
+  },
+  {
+    new: true
+  }).select("-password")
+user.save()
+res
+  .status(200)
+  .json(new Apiresponse(200, user, "avatar image update successfully"))
+}
+)
+
+const getcurrentuser = asyncHandler(async (req, res) => {
+  const data = req.user// Assuming req.user is populated by your authentication middleware
+console.log("data",data);
+
+
+  if (!isValidObjectId(data)) { // Changed from `if(user)` to `if(!user)`
+    throw new ApiError(404, 'User not found'); // Updated to send a 404 status code with the error
+  }
+
+
+  return res
+    .status(200)
+    .json(new Apiresponse(200,data,"successfully"))
+})
 
 const logout = asyncHandler(async (req, res,next) => {
   console.log("user data", req.user);
@@ -277,6 +254,8 @@ export  {
   signup,
   login,
   logout,
+  getcurrentuser,
   refreshaccesstoken,
-  verifyOtp
+  updatravatarimage
+  // verifyOtp
 }

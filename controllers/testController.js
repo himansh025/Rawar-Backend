@@ -1,8 +1,8 @@
 
-import User from "../Model/User.js";
-import asyncHandler from '../utils/asyncHandler'
+import {User} from "../Model/User.js";
+import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/Apierror.js'
-import  Apiresponse from '../utils/Apiresponse'
+import  Apiresponse from '../utils/Apiresponse.js'
 import { Test } from "../Model/Test.js";
 
 

@@ -1,27 +1,27 @@
-import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import app from './app.js';
+// app.use(express.json());
 
-
-dotenv.config();
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
 
 dotenv.config({
-  path: './env',
+  path: './.env',
 });
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
 
+const connectDB = async () => {
+  try {
+      const connectionInstance = await mongoose.connect(process.env.MONGODB_URL);
+      console.log(`MongoDB connected: ${connectionInstance.connection.host}`);
+  } catch (error) {
+      console.error("Error connecting to MongoDB", error);
+      process.exit(1); // Exit with failure
+  }
+};
+connectDB()
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 })
+
+console.log("dss");
