@@ -1,14 +1,11 @@
 import mongoose from  'mongoose';
+// import { Schema } from 'mongoose';
 
 const questionSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
     enum: ['quantitative', 'logical', 'verbal', 'programming', 'dbms']
-  },
-  subcategory: {
-    type: String,
-    required: true
   },
   difficulty: {
     type: String,

@@ -1,32 +1,59 @@
 import {User} from "../Model/User.js";
+import {Result } from '../Model/Result.js'
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/Apierror.js'
 import  Apiresponse from '../utils/Apiresponse.js'
-// import nodemailer  from "nodemailer";
-// import dotenv from 'dotenv'
+import nodemailer  from "nodemailer";
+import dotenv from 'dotenv'
+dotenv.config({
+  path: './.env',
+});
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { isValidObjectId } from "mongoose";
 
 
+const tempUserStore = {};
+// Function to generate OTP
+const generateOTP=(length)=> {
+  const digits = "0123456789";
+  let otp = "";
+  for (let i = 0; i < length; i++) {
+    otp += digits[Math.floor(Math.random() * digits.length)];
+  }
+  return otp;
+}
+console.log("auth",process.env.EMAIL) 
+console.log("auth",process.env.PASSWORD) 
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL, 
+    pass: process.env.PASSWORD, 
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
 const GenerateAccessandRefreshtoken = async (userid) => {
   try {
-    console.log("uid",userid);
-
     const user = await User.findById(userid)
     const refreshtoken = user.generateRefreshToken()
     const accesstoken = user.generateAccessToken()
 
     user.refreshtoken = refreshtoken
     await user.save({ validateBeforeSave: false })
-    console.log("token",refreshtoken,accesstoken);
+    // console.log("token",refreshtoken,accesstoken);
     
     return { accesstoken, refreshtoken }
   } catch (error) {
     throw new ApiError(500, "somethng went wrog while generating refresh and access token")
   }
 }
+
 const signup = asyncHandler(async (req, res) => {
   console.log("hello");
   
@@ -40,11 +67,58 @@ const signup = asyncHandler(async (req, res) => {
 
   // Check if the email already exists
   const existingUser = await User.findOne({ email });
+  console.log("exis email", existingUser);
   if (existingUser) {
     throw new ApiError(400, "User already exists");
   }
-console.log(existingUser);
 
+
+  const otp = generateOTP(4);
+  console.log(otp);
+  
+  // Temporarily store the user info along with OTP (to be verified later)
+  tempUserStore[email] = { name, email, password, otp };
+  
+  // Send OTP via email
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: `Hello! ${name}, Please Verify Your OTP`,
+    html: `<strong>Your OTP code is: ${otp}</strong>`,
+  };
+  console.log("main",mailOptions);
+  
+  try {
+    const data= await transporter.sendMail(mailOptions);
+    console.log("data",data);
+    
+    res.status(200).json(new Apiresponse(200, email, "OTP sent successfully"));
+  } catch (error) {
+    throw new ApiError(500, `Error while sending OTP: ${error}`);
+  }
+});
+
+
+const verifyOtp = asyncHandler(async (req, res, next) => {
+
+  const { email,otp } = req.body;
+  console.log("aya",req.body);
+
+  // Check if the OTP exists in the temporary store
+  const storedUser = tempUserStore[email];
+  if (!storedUser) {
+    throw new ApiError(400, "No OTP request found for this email");
+  }
+
+  // Validate OTP
+  if (storedUser.otp !== otp) {
+    throw new ApiError(400, "Invalid OTP");
+  }
+
+  // OTP is valid, create user
+  const { name, password } = storedUser;
+
+  // Hash the password
   const salt = await bcrypt.genSalt(8);
   const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -53,7 +127,7 @@ console.log(existingUser);
   await newUser.save();
 
   // Clear the temporary store
-  // delete tempUserStore[email];
+  delete tempUserStore[email];
   console.log("user",newUser);
 
   const {accesstoken,refreshtoken}=await GenerateAccessandRefreshtoken(newUser?._id)
@@ -77,35 +151,37 @@ console.log(existingUser);
     200,{
       success: true,
      user:{accesstoken,refreshtoken,createdUser},
-     message: 'signup successfully'})
+     message: 'OTP verified successfully'})
     )});
+
+
 
 const login =asyncHandler( async (req, res,next) => {
     const { email, password } = req.body;
-    console.log("check",req.body);
+    // console.log("check",req.body);
 
-    console.log("email,pass",email,password);
+    // console.log("email,pass",email,password);
 
     // Find the user by email
     const user = await User.findOne({ email });
-    console.log("user",user);
+    // console.log("user",user);
     
     if (!user) {
       throw new ApiError("Invalid email or password" );
     }
-    console.log(user.password);
+    // console.log(user.password);
     
 
     // Compare password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(isMatch);
+    // console.log(isMatch);
     
     if (!isMatch) {
       throw new ApiError(400," Invalid email or password")
     }
 
     const { accesstoken, refreshtoken } = await  GenerateAccessandRefreshtoken(user._id)
-  console.log("accesstoken refreshtoken", accesstoken, refreshtoken);
+  console.log("accesstoken refreshtoken for otp success", accesstoken, refreshtoken);
 
   const loggedinuser = await User.findById(user._id).select("-password -refreshtoken")
   console.log("loggedin user", loggedinuser);
@@ -130,11 +206,10 @@ const login =asyncHandler( async (req, res,next) => {
     .json( new Apiresponse(
       200,{
         user: {loggedinuser,extrauserdet, accesstoken, refreshtoken}}
-      ,"user logged in successfully"
+      ,"user sinup successfully"
     ));
 
 });
-
 
 const updatravatarimage = asyncHandler(async (req, res) => {
 const updateavatar = req.file.path;
@@ -250,12 +325,88 @@ const refreshaccesstoken = asyncHandler(async (req, res,next) => {
 
 })
 
+const getUserProfileStats = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const userAnswers = await Result.find({ userId: userId });
+
+    // console.log("Results found for user:", userAnswers);
+
+    if (!userAnswers || userAnswers.length === 0) {
+      const emptyStats = {
+        accuracyRate: 0,
+        rank: 0,
+        streak: 0,
+        completedQuestions: 0,
+        correctAnswers: 0,
+        testsTaken: 0
+      };
+
+      return res.status(200).json(
+        new Apiresponse(200, 
+          { stats: emptyStats, answers: [] }, 
+          "No results found for this user"
+        )
+      );
+    }
+
+    // Sum up all attempts and correct answers
+    let totalAttempts = 0;
+    let totalCorrectAnswers = 0;
+
+    userAnswers.forEach(answer => {
+      totalAttempts += answer.totalAttempts || 0;
+      
+      totalCorrectAnswers += answer.correctAnswers || 0;
+    });
+
+    // Calculate accuracy rate - avoid division by zero
+    const accuracyRate = totalAttempts > 0 
+      ? Math.round((totalCorrectAnswers / totalAttempts) * 100)
+      : 0;
+
+    // Calculate unique tests taken
+    const testsTaken = new Set(
+      userAnswers.map(answer => answer.category)
+    ).size;
+
+    const userStats = {
+      accuracyRate,
+      rank: 1,
+      completedQuestions: totalAttempts,
+      correctAnswersCount: totalCorrectAnswers,
+      testsTaken
+    };
+    
+
+    return res.status(200).json(
+      new Apiresponse(200,
+        { 
+          stats: userStats, 
+          answers: userAnswers 
+        },
+        "User profile stats retrieved successfully"
+      )
+    );
+
+  } catch (error) {
+    console.error("Error in getUserProfileStats:", error);
+    return res.status(500).json(
+      new Apiresponse(500, null, "Error retrieving user stats")
+    );
+  }
+});
+
+
+
 export  {
   signup,
   login,
   logout,
   getcurrentuser,
   refreshaccesstoken,
-  updatravatarimage
-  // verifyOtp
+  updatravatarimage,
+  getUserProfileStats,
+  verifyOtp
 }

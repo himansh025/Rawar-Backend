@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -46,7 +47,7 @@ const userSchema = new mongoose.Schema({
   testSessions: [
     {
       testId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Test',
         required: true
       },

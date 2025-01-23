@@ -1,12 +1,19 @@
 import { validationResult } from 'express-validator';
 import Groq from 'groq-sdk'; // Import Groq SDK
-import { asyncHandler } from '../utils/asynchandler.js';
-import { ApiError } from '../utils/Apierror.js';
-import { Apiresponse } from '../utils/Apiresponse.js';
-import { User } from '../models/user.model.js';
-import { uploadOnCloudinary } from '../utils/cloudniary.js';
+import  asyncHandler  from '../utils/asyncHandler.js';
+import  ApiError  from '../utils/Apierror.js';
+import  Apiresponse  from '../utils/Apiresponse.js';
+import { User } from '../Model/User.js';
+// import { uploadOnCloudinary } from '../utils/cloudniary.js';
+import dotenv from 'dotenv';
+
+dotenv.config({
+  path: './.env',
+});
 
 const groqApiKey = process.env.GROQ_API_KEY;
+// console.log(groqApiKey);
+
 if (!groqApiKey) {
   console.error('Error: Missing GROQ_API_KEY in .env file');
   process.exit(1);
@@ -51,22 +58,20 @@ async function getGroqData(prompt) {
 });
 
  const handleUserRegistration = asyncHandler(async (req, res) => {
-  const { fullname, password, email, username } = req.body;
+  const { name, password, email,  } = req.body;
 
-  if ([fullname, password, email, username].some((field) => field?.trim() === "")) {
+  if ([name, password, email].some((field) => field?.trim() === "")) {
     throw new ApiError(400, 'All fields are required');
   }
 
   try {
     // Example: handle avatar upload
-    const avatarUrl = await uploadOnCloudinary(req.files?.avatar);
+    // const avatarUrl = await uploadOnCloudinary(req.files?.avatar);
 
     const newUser = new User({
-      fullname,
+      name,
       password,
-      email,
-      username,
-      avatar: avatarUrl,
+      email
     });
     const createdUser = await newUser.save();
 

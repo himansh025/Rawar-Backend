@@ -3,20 +3,24 @@ import {User} from "../Model/User.js"
 import jwt from "jsonwebtoken"
 import asyncHandler  from '../utils/asyncHandler.js'
 import ApiError  from '../utils/Apierror.js'
+import dotenv from 'dotenv'
 
-// const bcrypt = require("bcryptjs");
-// const uploadOnCloudinary =require('../utils/cloudniary.js')
-// const  Apiresponse=require('../utils/Apiresponse.js')
-
+dotenv.config({
+  path: './.env',
+});
  const verifyjwt= asyncHandler(async(req,res,next)=>{
    try {
-     const token = req.cookies?.accesstoken || req.header("Authorization")?.replace("Bearer ","")
+    const token = req.cookies?.accesstoken || req.header("Authorization")?.replace("Bearer ", "")
+
+    // console.log("Authorization Header:", req.header("Authorization"));
+
+    
      if(!token){
          throw new ApiError(401,"unauthorized request")
      }
- console.log(token);
  
    const decodedtoken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
+ console.log(decodedtoken);
  
   const user =await User.findById(decodedtoken?._id).select(
      "-password -refreshtoken")

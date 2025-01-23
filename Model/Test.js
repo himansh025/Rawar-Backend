@@ -1,4 +1,4 @@
-import  mongoose from  'mongoose';
+import mongoose from 'mongoose';
 
 const testSchema = new mongoose.Schema({
   title: {
@@ -12,7 +12,7 @@ const testSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['quantitative', 'logical', 'verbal', 'programming', 'dbms']
+    enum: ['quantitative', 'logical', 'verbal', 'programming', 'dbms', 'technical']
   },
   difficulty: {
     type: String,
@@ -21,17 +21,17 @@ const testSchema = new mongoose.Schema({
   },
   duration: {
     type: Number,
-    required: true // in seconds
+    required: true
   },
   questions: [{
     question: {
       type: String,
       required: true
     },
-    options: [{
-      type: String,
+    options: {
+      type: [String],
       required: true
-    }],
+    },
     correctAnswer: {
       type: String,
       required: true
@@ -45,8 +45,6 @@ const testSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-},{timestamps:true});
+}, { timestamps: true });
 
 export const Test = mongoose.model('Test', testSchema);
-
- 

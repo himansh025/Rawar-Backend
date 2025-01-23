@@ -27,24 +27,18 @@ app.use(cors({
 // Middleware for parsing incoming requests
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-
-// Static files configuration
-// app.use('/public', express.static(path.join(__dirname, 'public')));
-// app.use(express.static("public"));
+app.use(express.static("public"));
 app.use(cookieParser());
 
-// Importing Routes
 // import authRoutes from './routes/auth.js';
 import questionRoutes from './routes/quizRoute.js';
 import testRoutes from './routes/testRoute.js';
 import userRoutes from './routes/userRoutes.js';
-
-
-console.log("hf");
+import chatbot from './routes/chatbotRoute.js'
 
 app.use('/api/v1/user',userRoutes);
 // app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/questions', questionRoutes);
 app.use('/api/v1/tests', testRoutes);
-
+app.use('/api/v1/chatbot',chatbot );
 export default app;

@@ -1,10 +1,34 @@
+import { Router } from 'express';
+const router = Router();
 
-import  {Router} from  'express';
-const router =Router()
-import  {GetQuestionsFromAPI,GetquestionbyID,SubmitAns} from '../controllers/questionController.js';
+import {
+    addQuestion,
+    bulkAddQuestions,
+    getQuestions,
+    getQuestionById,
+  deleteQuestion,
+} from '../controllers/questionController.js';
+import {saveQuestionResult,getResult} from '../controllers/resultController.js'
+import verifyjwt from '../middleware/auth.js';
 
-router.get('/Getallquestions',GetQuestionsFromAPI );
-router.get('GetquestionbyID/:id',GetquestionbyID );
-router.post('/SubmitAns/:id',SubmitAns );
+router.get('/GetAllquestion', getQuestions);
+
+// Get a question by ID
+router.get('/GetquestionbyID/:id', getQuestionById);
+
+router.post('/SubResult', verifyjwt,saveQuestionResult );
+
+// Submit an answer 
+router.get('/getResult', verifyjwt,getResult);
+
+// Bulk add questions 
+router.post('/bulkadd', bulkAddQuestions);
+
+// Add a single question
+router.post('/addquestion', verifyjwt, addQuestion);
+
+// Delete a question 
+router.delete('/deletequiz/:id', verifyjwt, deleteQuestion);
+
 
 export default router;

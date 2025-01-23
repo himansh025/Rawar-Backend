@@ -1,10 +1,19 @@
-import  {Router} from  'express';
-const router =Router()
-import  {GettestbyID,getalltest,Submittestanswers,Starttest} from '../controllers/testController.js';
+import { Router } from 'express';
+import { getTestById,
+     getAllTests,
+     addTest,
+ submitTestAnswers,
+  startTest
+ } from '../controllers/testController.js';
+import verifyjwt from '../middleware/auth.js';
 
-router.get('/Getallquestions',getalltest );
-router.get('GetquestionbyID/:id',GettestbyID );
-router.post('/SubmittestAns/:id',Submittestanswers );
-router.post('/Starttest/:id',Starttest );
+const router = Router();
+
+router.get('/alltests', getAllTests);
+router.post('/start/:id',verifyjwt,startTest);
+router.post('/addtest', addTest);
+router.get('/tests/:id',verifyjwt, getTestById);
+router.post('/submit/:id',verifyjwt, submitTestAnswers);
+    
 
 export default router;
