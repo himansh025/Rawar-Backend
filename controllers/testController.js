@@ -27,7 +27,7 @@ export const getAllTests = asyncHandler(async (req, res) => {
 
 export const addTest = async (req, res) => {
   try {
-    console.log(req.body);
+    console.log("body",req.body);
     
     const { title, description, duration, category, difficulty, questions } = req.body;
 
@@ -38,13 +38,15 @@ export const addTest = async (req, res) => {
 
     // Create a new test
     const newTest = new Test({
-      title,
-      description,
-      duration,
-      category,
-      difficulty,
-      questions,
+      title:title,
+      description:description,
+      duration:duration,
+      category:category,
+      difficulty:difficulty,
+      questions:questions,
     });
+console.log("TEST IS CREATED",newTest);
+
 
     // Save the test to the database
     await newTest.save();

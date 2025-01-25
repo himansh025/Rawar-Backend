@@ -20,11 +20,11 @@ dotenv.config({
      }
  
    const decodedtoken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
- console.log(decodedtoken);
+//  console.log(decodedtoken);
  
   const user =await User.findById(decodedtoken?._id).select(
      "-password -refreshtoken")
- console.log("authenticated");
+//  console.log("authenticated");
  
      if(!user){
          throw new ApiError(404,"invalid access token")
