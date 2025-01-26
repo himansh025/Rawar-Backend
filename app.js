@@ -2,13 +2,11 @@
 import express from 'express';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
-// import path from 'path';
 const app = express();
-// console.log("hello");
 
 const allowedOrigins = [
   'http://localhost:5173', // Local development frontend
-   'https://rawarfrontend.vercel.app/', // Production frontend
+   'https://rawarfrontend.vercel.app', // Production frontend
 ];
 
 
