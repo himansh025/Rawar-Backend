@@ -8,13 +8,15 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173', // Local development frontend
-   'https://rawar-forntend.onrender.com', // Production frontend
+   'https://rawarfrontend.vercel.app/', // Production frontend
 ];
 
 
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log("origin",origin);
+    
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
