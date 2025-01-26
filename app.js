@@ -5,23 +5,20 @@ import cors from 'cors';
 const app = express();
 
 const allowedOrigins = [
-  'http://localhost:5173', // Local development frontend
-   'https://rawarfrontend.vercel.app', // Production frontend
+  'http://localhost:5173',
+  'https://rawarfrontend.onrender.com',
 ];
-
-
 
 app.use(cors({
   origin: (origin, callback) => {
-    console.log("origin",origin);
-    
+    // Allow requests without origin (e.g., from Postman)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true, 
 }));
 
 // Middleware for parsing incoming requests
