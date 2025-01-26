@@ -16,7 +16,7 @@ router.get('/GetAllquestion', getQuestions);
 // Get a question by ID
 router.get('/GetquestionbyID/:id', getQuestionById);
 
-router.post('/SubResult', verifyjwt,saveQuestionResult );
+router.post('/SubResult',saveQuestionResult );
 
 // Submit an answer 
 router.get('/getResult', verifyjwt,getResult);
@@ -25,10 +25,10 @@ router.get('/getResult', verifyjwt,getResult);
 router.post('/bulkadd', bulkAddQuestions);
 
 // Add a single question
-router.post('/addquestion', verifyjwt, addQuestion);
+router.post('/addquestion', addQuestion);
 
 // Delete a question 
-router.delete('/deletequiz/:id', verifyjwt, deleteQuestion);
+router.delete('/deletequiz/:id', deleteQuestion);
 
 
 export default router;

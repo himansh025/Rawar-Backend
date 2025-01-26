@@ -19,7 +19,6 @@ export const bulkAddQuestions = async (req, res) => {
     if (!Array.isArray(questions)) {
       return res.status(400).json({ error: 'Input must be an array of questions' });
     }
-
     const result = await Question.insertMany(questions);
     res.status(201).json({ message: 'Questions added successfully', data: result });
   } catch (error) {
@@ -48,6 +47,8 @@ export const getQuestions = async (req, res) => {
 export const getQuestionById = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(id);
+    
     const question = await Question.findById(id);
 
     if (!question) {

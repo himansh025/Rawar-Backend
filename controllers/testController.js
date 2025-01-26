@@ -1,8 +1,8 @@
 import { Test } from '../Model/Test.js';
 import { User } from '../Model/User.js';
 import asyncHandler from 'express-async-handler';
+import ApiError from '../utils/Apierror.js';
 
-// Get all available tests
 export const getAllTests = asyncHandler(async (req, res) => {
   const { category, difficulty } = req.query;
   const query = {};
@@ -14,29 +14,18 @@ export const getAllTests = asyncHandler(async (req, res) => {
     .select('-questions.correctAnswer')
     .sort({ createdAt: -1 });
 
-    console.log("test",tests);
-    
   res.status(200).json({
     success: true,
     data: tests,
     message: "Tests retrieved successfully"
   });
 });
-
-// src/controllers/testController.js
-
 export const addTest = async (req, res) => {
-  try {
-    console.log("body",req.body);
-    
+  try {    
     const { title, description, duration, category, difficulty, questions } = req.body;
-
-    // Basic validation
     if (!title || !description || !duration || !category || !difficulty || !questions || questions.length === 0) {
       return res.status(400).json({ message: 'All fields are required, and there must be at least one question.' });
     }
-
-    // Create a new test
     const newTest = new Test({
       title:title,
       description:description,
@@ -45,12 +34,7 @@ export const addTest = async (req, res) => {
       difficulty:difficulty,
       questions:questions,
     });
-console.log("TEST IS CREATED",newTest);
-
-
-    // Save the test to the database
     await newTest.save();
-
     res.status(201).json({ message: 'Test added successfully!', test: newTest });
   } catch (error) {
     console.error('Error adding test:', error);
@@ -58,17 +42,14 @@ console.log("TEST IS CREATED",newTest);
   }
 };
 
-
-// Get test by ID
 export const getTestById = asyncHandler(async (req, res) => {
   const test = await Test.findById(req.params.id)
     .select('-questions.correctAnswer');
-  
+
   if (!test) {
     res.status(404);
     throw new Error('Test not found');
   }
-
   res.status(200).json({
     success: true,
     data: test,
@@ -76,46 +57,51 @@ export const getTestById = asyncHandler(async (req, res) => {
   });
 });
 
-// Start a test
+
 export const startTest = asyncHandler(async (req, res) => {
-  const test = await Test.findById(req.params.id);
-  console.log(  "userr");  
-  console.log("user id", req.user._id);  // This should work
+  const testId = req.params.id;
+  const { userid } = req.body; // Extract userid from req.body
 
-  // console.log(  "userr",req.user_._id);  
-
+  // console.log("Starting test with ID:", testId, "for user:", userid);
+  const test = await Test.findById(testId);
   if (!test) {
     res.status(404);
-    throw new Error('Test not found');
+    throw new Error("Test not found");
   }
 
   const testSession = {
     testId: test._id,
     startTime: new Date(),
-    status: 'in-progress'
+    status: "in-progress",
   };
 
-  // console.log(  "userr",req.user_.id);  
+  const user = await User.findById(userid);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
 
-  // Note: In a real application, you would get the user from authentication
-  const user = await User.findById(req.user._id);
   user.testSessions.push(testSession);
   await user.save();
+
+  // console.log("User after starting test session:", user);
 
   res.status(200).json({
     success: true,
     data: testSession,
-    message: "Test started successfully"
+    message: "Test started successfully",
   });
 });
 
-// Submit test answers
+
 export const submitTestAnswers = asyncHandler(async (req, res) => {
   const { answers } = req.body;
-  console.log("submit test ans",answers);
+  // console.log("submit test ans",answers);
   
   const test = await Test.findById(req.params.id);
-console.log("test submited",test);
+// console.log("test submited",test);
+
+// console.log("userid ",req.body.userid);
 
   if (!test) {
     res.status(404);
@@ -125,6 +111,8 @@ console.log("test submited",test);
   // Calculate results
   let correct = 0;
   let incorrect = 0;
+  
+  // console.log(answers);
 
   test.questions.forEach((question, index) => {
     if (answers[index] === question.correctAnswer) {
@@ -134,19 +122,23 @@ console.log("test submited",test);
     }
   });
 
+
   const totalQuestions = test.questions.length;
   const score = totalQuestions * 4 - incorrect*4 ;
   const accuracy = (correct / totalQuestions) * 100;
-  console.log("score",score);
-  console.log("totalques",totalQuestions);
-  console.log("acc",accuracy);
+// console.log(totalQuestions,score,accuracy,"sd");
 
-  // Update user's test session
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.body.userid);
+  // console.log("userid find for sub test",user);
+  
   const testSession = user.testSessions.find(
     session => session.testId.toString() === test._id.toString() && 
     session.status === 'in-progress'
   );
+  await user.save();
+  // console.log(user,"userdata after al set");
+  
+  // console.log("test sess",testSession)
 
   if (testSession) {
     testSession.status = 'completed';
@@ -162,13 +154,9 @@ console.log("test submited",test);
     user.progress.averageScore = totalScore / totalTests;
     console.log("total score",totalScore);
     await user.save();
+    console.log(user,"userdata after al set");
+    
   }
-  console.log( score,
-    accuracy,
-    correct,
-    incorrect,
-    totalQuestions);
-  
 
   res.status(200).json({
     success: true,
@@ -181,4 +169,16 @@ console.log("test submited",test);
     },
     message: "Test submitted successfully"
   });
+});
+
+export const deleteTest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  // console.log("body ",req.body);
+  console.log("test id",id);
+  if (!id) {
+    throw new ApiError(400,'Test id  not found');
+  }
+  const test = await Test.findByIdAndDelete(id);
+// console.log("test  after deleting",test);
+  res.status(200).json("test delted successfully" );
 });
