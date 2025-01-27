@@ -31,9 +31,12 @@ import admin from './routes/adminRoutes.js';
 import questionRoutes from './routes/quizRoute.js';
 import testRoutes from './routes/testRoute.js';
 import userRoutes from './routes/userRoutes.js';
+import revision from './routes/revisionRoutes.js';
 
 app.use('/api/v1/user',userRoutes);
 app.use('/api/v1/admin', admin);
 app.use('/api/v1/questions', questionRoutes);
 app.use('/api/v1/tests', testRoutes);
+app.use('/api/v1/revision', revision);
+
 export default app;
