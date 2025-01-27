@@ -15,8 +15,7 @@ import verifyjwt from "../middleware/auth.js";
 import upload from '../middleware/multer.middleware.js'
 
 
-router.post('/signup', signup
-);
+router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', logout);
 router.post('/refreshaccesstoken', refreshaccesstoken);
