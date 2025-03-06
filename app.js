@@ -8,7 +8,7 @@ console.log("hello");
 
 const allowedOrigins = [
   'http://localhost:5173', // Local development frontend
-   '', // Production frontend
+   'https://rawarfrontend.vercel.app', // Production frontend
 ];
 
 
