@@ -6,8 +6,7 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://rawarfrontend.onrender.com',
-  'https://rawarfrontend.vercel.app'
+  'https://rawar-frontend.netlify.app'
 ];
 
 app.use(cors({
