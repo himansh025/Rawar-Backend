@@ -4,11 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from 'cors';
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://rawar-frontend.netlify.app',
-  'https://rawar-frontend.netlify.app/'
-];
+const allowedOrigins =['https://rawar-frontend.netlify.app'];
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests without origin (e.g., from Postman)
