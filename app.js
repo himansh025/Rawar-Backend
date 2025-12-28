@@ -4,7 +4,8 @@ import cookieParser from "cookie-parser";
 import cors from 'cors';
 const app = express();
 app.use("/api/health",async(req,res)=>{
-  res.send("working fine"));
+  res.send("working fine")
+});
 const allowedOrigins =['https://rawar-frontend.vercel.app'];
 app.use(cors({
   origin: (origin, callback) => {
